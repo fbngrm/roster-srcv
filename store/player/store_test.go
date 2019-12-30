@@ -96,7 +96,108 @@ func TestUpdate(t *testing.T) {
 	want.RosterID = 1
 	want.Status = "benched"
 	if !reflect.DeepEqual(got, &want) {
-		t.Errorf("want\n%+v\ngot\n%+v\n", got, want)
+		t.Errorf("want\n%+v\ngot\n%+v\n", want, got)
+	}
+	// we make sure that all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+// swaps the status
+func TestChangePlayer(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	defer db.Close()
+
+	// before we actually execute our api function, we need to expect required DB actions
+	rowsActive := sqlmock.NewRows([]string{"id", "roster_id", "first_name", "last_name", "alias", "active"}).
+		AddRow(2, 1, "boo", "baz", "boobaz", "active")
+	rowsBenched := sqlmock.NewRows([]string{"id", "roster_id", "first_name", "last_name", "alias", "active"}).
+		AddRow(1, 1, "foo", "bar", "foobar", "benched")
+
+	query := `
+  UPDATE players
+  SET status = \$1
+  WHERE id = \$2
+  AND status = \$3
+  AND roster_id = \( \-\- ensures that both players are in the same roster
+    SELECT roster_id
+    FROM players
+    WHERE id = \$4
+  \)
+  RETURNING *`
+
+	mock.ExpectBegin()
+	mock.ExpectPrepare(query)
+
+	// expected query for benching active player
+	mock.ExpectQuery(query).WithArgs(
+		"active",
+		2,
+		"benched",
+		1,
+	).WillReturnRows(rowsActive)
+
+	// expected query for activating benched player
+	mock.ExpectQuery(query).WithArgs(
+		"benched",
+		1,
+		"active",
+		2,
+	).WillReturnRows(rowsBenched)
+
+	mock.ExpectCommit()
+
+	// input
+	players := store.PlayerChange{
+		Active: store.Player{
+			PlayerID:  1,
+			RosterID:  1,
+			FirstName: "foo",
+			LastName:  "bar",
+			Alias:     "foobar",
+			Status:    "active",
+		},
+		Benched: store.Player{
+			PlayerID:  2,
+			RosterID:  1,
+			FirstName: "boo",
+			LastName:  "baz",
+			Alias:     "boobaz",
+			Status:    "benched",
+		},
+	}
+
+	// expected result
+	want := &store.PlayerChange{
+		Active: store.Player{
+			PlayerID:  2,
+			RosterID:  1,
+			FirstName: "boo",
+			LastName:  "baz",
+			Alias:     "boobaz",
+			Status:    "active",
+		},
+		Benched: store.Player{
+			PlayerID:  1,
+			RosterID:  1,
+			FirstName: "foo",
+			LastName:  "bar",
+			Alias:     "foobar",
+			Status:    "benched",
+		},
+	}
+
+	ps := New(database.New(db, "mock-db", 0))
+	got, err := ps.ChangePlayers(context.Background(), players)
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want\n%+v\ngot\n%+v\n", want, got)
 	}
 	// we make sure that all expectations were met
 	if err := mock.ExpectationsWereMet(); err != nil {
