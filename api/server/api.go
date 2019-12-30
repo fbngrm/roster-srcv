@@ -126,7 +126,9 @@ func (ps *playerService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// we expect a request body that represents a player or we consider
 		// the request as invalid
 		var player store.Player
-		if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields() // catch unwanted fields
+		if err := decoder.Decode(&player); err != nil {
 			writeError(w, r, errBadRequest, http.StatusBadRequest)
 			return
 		}
@@ -143,7 +145,9 @@ func (ps *playerService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// we expect a request body that represents a player with the new
 			// rosterID or we consider the request as invalid
 			var player store.Player
-			if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
+			decoder := json.NewDecoder(r.Body)
+			decoder.DisallowUnknownFields() // catch unwanted fields
+			if err := decoder.Decode(&player); err != nil {
 				writeError(w, r, err, http.StatusInternalServerError)
 				return
 			}
@@ -161,7 +165,9 @@ func (ps *playerService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// we expect a request body that contains two players or we
 			// consider the request as invalid
 			var players store.PlayerChange
-			if err := json.NewDecoder(r.Body).Decode(&players); err != nil {
+			decoder := json.NewDecoder(r.Body)
+			decoder.DisallowUnknownFields() // catch unwanted fields
+			if err := decoder.Decode(&players); err != nil {
 				writeError(w, r, err, http.StatusInternalServerError)
 				return
 			}
