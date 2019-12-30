@@ -198,7 +198,7 @@ func (ps *playerService) update(ctx context.Context, w http.ResponseWriter, r *h
 	return
 }
 
-// ChangePlayers swaps two players statuses. Responds the updated/patched
+// change swaps two players statuses. Responds the updated/patched
 // players or an error (and thus is HTTP/PATCH compliant).
 func (ps *playerService) change(ctx context.Context, w http.ResponseWriter, r *http.Request, players store.PlayerChange) {
 	p, err := ps.ChangePlayers(ctx, players)
