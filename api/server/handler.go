@@ -19,7 +19,7 @@ func newHandler(rs rosterStore, ps playerStore, timeout time.Duration, logger ze
 	mw = append(mw, middleware.NewRecoverHandler())
 	mw = append(mw, middleware.NewContextLog(logger)...)
 
-	// services handle http requests and hold a store to opareate on a database
+	// services handle http requests and hold a store to operate on a database
 	rosterSrvc := middleware.Use(&rosterService{rs, timeout}, mw...)
 	playerSrvc := middleware.Use(&playerService{ps, timeout}, mw...)
 
