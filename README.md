@@ -157,7 +157,7 @@ The current setup uses a human friendly logging format.
 The logger attaches the service name and build version to the log output.
 
 ## Architecture
-I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
+I follow industry standards like the go [conventions](https://golang.org/doc/code.html), [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
 
 The interfaces are kept small to bigger the abstraction.
 Variable names are short when they are used close to their declaration.
