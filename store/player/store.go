@@ -5,6 +5,7 @@ import (
 
 	"github.com/fgrimme/patrongg/database"
 	"github.com/fgrimme/patrongg/store"
+	"github.com/rs/zerolog/log"
 )
 
 // PlayerStore handles operations on the the
@@ -126,7 +127,9 @@ func (ps *PlayerStore) ChangePlayers(ctx context.Context, players store.PlayerCh
 	}
 	stmt, err := tx.Prepare(query)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			log.Ctx(ctx).Error().Err(err).Interface("players", players).Msg("failed rollback transaction")
+		}
 		return nil, err
 	}
 	defer stmt.Close()
@@ -153,7 +156,9 @@ func (ps *PlayerStore) ChangePlayers(ctx context.Context, players store.PlayerCh
 			&alias,
 			&status)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			log.Ctx(ctx).Error().Err(err).Interface("players", players).Msg("failed rollback transaction")
+		}
 		return nil, err
 	}
 
@@ -182,7 +187,9 @@ func (ps *PlayerStore) ChangePlayers(ctx context.Context, players store.PlayerCh
 			&alias,
 			&status)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			log.Ctx(ctx).Error().Err(err).Interface("players", players).Msg("failed rollback transaction")
+		}
 		return nil, err
 	}
 

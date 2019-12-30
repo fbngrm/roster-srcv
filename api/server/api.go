@@ -63,10 +63,6 @@ func (rs *rosterService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rs.getPlayers(ctx, w, r, rosterID, Benched)
 		return
 	}
-
-	// note, this is non-reachable code whith the current mux routing setup
-	writeError(w, r, errNotFound, http.StatusNotFound)
-	return
 }
 
 // getRoster responds with a representation of the entire roster for the given
@@ -78,7 +74,6 @@ func (rs *rosterService) getRoster(ctx context.Context, w http.ResponseWriter, r
 		return
 	}
 	encodeJSON(w, r, players, http.StatusOK)
-	return
 }
 
 // getPlayers responds with a representation of the players with the given status
@@ -189,7 +184,6 @@ func (ps *playerService) insert(ctx context.Context, w http.ResponseWriter, r *h
 		return
 	}
 	encodeJSON(w, r, p, http.StatusOK)
-	return
 }
 
 // update updates the given player. Responds with the updated/patched player or
@@ -201,7 +195,6 @@ func (ps *playerService) update(ctx context.Context, w http.ResponseWriter, r *h
 		return
 	}
 	encodeJSON(w, r, p, http.StatusOK)
-	return
 }
 
 // change swaps two players statuses. Responds the updated/patched
@@ -213,5 +206,4 @@ func (ps *playerService) change(ctx context.Context, w http.ResponseWriter, r *h
 		return
 	}
 	encodeJSON(w, r, p, http.StatusOK)
-	return
 }
