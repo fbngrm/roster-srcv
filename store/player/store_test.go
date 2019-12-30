@@ -60,7 +60,12 @@ func TestUpdate(t *testing.T) {
 
 	query := `
   UPDATE players
-  SET .*
+  SET
+    roster_id = COALESCE\(NULLIF\(\$2, CAST\(0 AS BIGINT\)\), players.roster_id\),
+    first_name = COALESCE\(NULLIF\(\$3, \'\'\), players.first_name\),
+    last_name  = COALESCE\(NULLIF\(\$4, \'\'\), players.last_name\),
+    alias      = COALESCE\(NULLIF\(\$5, \'\'\), players.alias\),
+	status     = COALESCE\(NULLIF\(\$6, \'\'\), players.status\)
   WHERE id = \$1
   RETURNING \*`
 
