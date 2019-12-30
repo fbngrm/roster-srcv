@@ -51,7 +51,6 @@ Builds will be placed in the `/bin` directory. Binaries use the latest git commi
 The service is intended to be ran in a docker container.
 
 ```bash
-make build
 make run
 ```
 
