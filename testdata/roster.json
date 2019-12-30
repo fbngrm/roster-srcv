@@ -1,0 +1,45 @@
+{
+    "id": 382574876546039808,
+    "players": {
+        "active": [
+            {
+                "id": 182919996442279937,
+                "first_name": "Dominic",
+                "last_name": "Luklowski",
+                "alias": "DataSlayer9"
+            },
+            {
+                "id": 337332768876789763,
+                "first_name": "Jane",
+                "last_name": "Beddingfield",
+                "alias": "__Jain"
+            },
+            {
+                "id": 444322878230495243,
+                "first_name": "Phillip",
+                "last_name": "Aaronivic",
+                "alias": "phikic"
+            },
+            {
+                "id": 602403447886839809,
+                "first_name": "Ji",
+                "last_name": "Bhok",
+                "alias": "TARG3T"
+            },
+            {
+                "id": 622318474387128331,
+                "first_name": "Damian",
+                "last_name": "Grey",
+                "alias": "Klikx"
+            }
+        ],
+        "benched": [
+            {
+                "id": 184315303323238400,
+                "first_name": "Oliver",
+                "last_name": "Fieldbutter",
+                "alias": "Smaayo"
+            }
+        ]
+    }
+}
