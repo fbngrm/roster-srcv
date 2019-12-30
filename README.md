@@ -79,7 +79,7 @@ curl -X POST http://127.0.0.1:8080/players/add \
 To add a player to a roster, a PATCH request must be used since a partial update is performed to an existing resource.
 The request payload needs to contain the new roster-id.
 A JSON representation of the updated player is returned.
-An error is returned it the roster does not exist.
+An error is returned it the roster does not exist or the roster will be in an invalid state (more or less than 5 active players).
 When adding a player to a new roster, the player is benched by default to not corrupt the roster's state.
 
 `PATCH /players/update`
@@ -209,10 +209,6 @@ does not provide useful feedback to a user. This needed to be enhanced in a prod
 To properly represent the status of a player in the database, we needed
 to add another table that holds the valid states "active" and "benched", that get then
 referenced by the players status column.
-
-### Bugs
-Adding an "active" player to the roster she currently is a member of, results in
-the players status getting set to "benched".
 
 When an active player is moved to another roster, the db trigger prevents this to keep the state of the roster valid (5 active players).
 This should be ensured on the application layer too by changing the update method in the player store.
