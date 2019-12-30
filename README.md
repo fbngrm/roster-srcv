@@ -214,3 +214,5 @@ referenced by the players status column.
 Adding an "active" player to the roster she currently is a member of, results in
 the players status getting set to "benched".
 
+When an active player is moved to another roster, the db trigger prevents this to keep the state of the roster valid (5 active players).
+This should be ensured on the application layer too by changing the update method in the player store.
