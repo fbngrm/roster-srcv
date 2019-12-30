@@ -18,6 +18,7 @@ import (
 
 type mockRosterStore struct{}
 
+// uses the roster id to get the test data.
 func (rs *mockRosterStore) Get(ctx context.Context, rosterID uint64) (*store.Roster, error) {
 	return rosterTests[rosterID].r, rosterTests[rosterID].e
 }
@@ -129,14 +130,19 @@ func TestGet(t *testing.T) {
 // we use the player id to detemine the return values.
 type mockPlayerStore struct{}
 
+// uses the players id to get the test data.
 func (ps *mockPlayerStore) Insert(ctx context.Context, player store.Player) (*store.Player, error) {
 	return insertTests[player.PlayerID].r, insertTests[player.PlayerID].e
 }
+
+// uses the players id to get the test data.
 func (ps *mockPlayerStore) Update(ctx context.Context, player store.Player) (*store.Player, error) {
 	return updateTests[player.PlayerID].r, updateTests[player.PlayerID].e
 }
+
+// uses the active players id to get the test data.
 func (ps *mockPlayerStore) ChangePlayers(ctx context.Context, players store.PlayerChange) (*store.PlayerChange, error) {
-	return nil, nil
+	return changeTests[players.Active.PlayerID].r, changeTests[players.Active.PlayerID].e
 }
 
 // test cases indexed by player id
@@ -184,9 +190,9 @@ var insertTests = map[uint64]struct {
 			Alias:     "foobar",
 			Status:    "active",
 		},
-		p: `{"player_id":3,"roster_id":0,"first_name":"foo","last_name":"bar","alias":"foobar","active":true}`,
+		p: `{"player_id":3,"roster_id":0,"first_name":"foo","last_name":"bar","alias":"foobar","status":"active"}`,
 		s: http.StatusOK,
-		b: []byte(`{"player_id":3,"roster_id":0,"first_name":"foo","last_name":"bar","alias":"foobar","active":true}`),
+		b: []byte(`{"player_id":3,"roster_id":0,"first_name":"foo","last_name":"bar","alias":"foobar","status":"active"}`),
 	},
 }
 
@@ -294,6 +300,96 @@ func TestUpdate(t *testing.T) {
 	c := s.Client()
 
 	for _, tc := range updateTests {
+		tt := tc
+		t.Run(tt.d, func(t *testing.T) {
+			req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/%s", s.URL, tt.u), strings.NewReader(tt.p))
+			if err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+			resp, err := c.Do(req)
+			if err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+			// expected result
+			if want, got := tt.s, resp.StatusCode; want != got {
+				t.Errorf("want status code %d got %d", want, got)
+			}
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+			resp.Body.Close()
+			if want, got := tt.b, body; bytes.Compare(want, got) == 1 {
+				t.Errorf("want response\n%+s\ngot\n%+s", want, got)
+			}
+		})
+	}
+}
+
+// test cases indexed by player id
+var changeTests = map[uint64]struct {
+	d string              // description of test case
+	r *store.PlayerChange // mock store response
+	e error               // mock store error
+	u string              // request url path
+	p string              // request payload
+	s int                 // expected HTTP status code
+	b []byte              // expected payload
+}{
+	// url path errors
+	0: { // 500
+		d: "expect malformed JSON payload to result in 500 when updating player",
+		u: "players/change",
+		p: `{"player_id":1`,
+		s: http.StatusInternalServerError,
+		b: []byte(fmt.Sprintf(`{"error":"%s"}`, errInternal.Error())),
+	},
+	// store errors
+	1: { // 500
+		d: "expect store error to result in 500 when updating player",
+		e: errInternal,
+		u: "players/change",
+		s: http.StatusInternalServerError,
+		b: []byte(fmt.Sprintf(`{"error":"%s"}`, errInternal.Error())),
+	},
+	// success
+	2: { // 200
+		d: "expect players statuses to get swapped",
+		u: "players/change",
+		r: &store.PlayerChange{
+			Active: store.Player{
+				PlayerID: 2,
+				RosterID: 0,
+				Status:   "benched",
+			},
+			Benched: store.Player{
+				PlayerID: 3,
+				RosterID: 0,
+				Status:   "active",
+			},
+		},
+		p: `{"active":{"player_id":2,"roster_id":0,"status":"active"},"benched":{"player_id":3,"roster_id":0,"status":"benched"}}`,
+		s: http.StatusOK,
+		b: []byte(`{"active":{"player_id":2,"roster_id":0,"first_name":"","last_name":"","alias":"","status":"benched"},"benched":{"player_id":3,"roster_id":0,"first_name":"","last_name":"","alias":"","status":"acti`),
+	},
+}
+
+func TestChange(t *testing.T) {
+	// service initialized with a mock store to
+	// control the data and errors we return
+	ps := &playerService{
+		&mockPlayerStore{},
+		200 * time.Millisecond,
+	}
+
+	router := mux.NewRouter()
+	router.Handle("/players/change", ps).Methods("PATCH")
+
+	s := httptest.NewServer(router)
+	defer s.Close()
+	c := s.Client()
+
+	for _, tc := range changeTests {
 		tt := tc
 		t.Run(tt.d, func(t *testing.T) {
 			req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/%s", s.URL, tt.u), strings.NewReader(tt.p))
