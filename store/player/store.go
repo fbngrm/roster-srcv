@@ -102,7 +102,7 @@ func (ps *PlayerStore) Update(ctx context.Context, player store.Player) (*store.
 // player to be benched is currently active and both players are members of the
 // same roster.
 // In case of failure, the transaction is rolled back.
-// Returns the updated/patched players (and thus is HTTP/PATCH compliant).
+// Returns the updated/patched players.
 func (ps *PlayerStore) ChangePlayers(ctx context.Context, players store.PlayerChange) (*store.PlayerChange, error) {
 	query := `
   UPDATE players
